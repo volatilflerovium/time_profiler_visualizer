@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=wxElapsedTimeVisualizer
+Exec=wxElapsedTimeVisualizer
+Icon=wxElapsedTimeVisualizer
+Categories=Development;
