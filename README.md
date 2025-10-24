@@ -39,32 +39,31 @@ on the Documentation button an follow the instructions.
   
   //example 1)
   
-  do_loop{
-  	do something
   
-     timeProfiler.start()
-     do something else
-     timeProfiler.takeSample(true)    // here we capture individual samples
+  	//do something
+  
+    timeProfiler.start()
+    // do task to profile
+    timeProfiler.takeSample(true)    // here we capture individual samples
    
-    do more stuff
+    // do more stuff
   
-  }
-  
+
   //example 2)
   
-  do_loop{
-  	do something
+  // do something
   
-     timeProfiler.start()
-     do something else
-     timeProfiler.pause()    // here we pause the clock
+  timeProfiler.start()
+  // do some task to profile 
+  timeProfiler.pause()    // here we pause the clock
    
-    do more stuff
-  
-  }
-  
-  timeProfiler.takeSample(true); // here we capture the average of the elapsed time
-                         // of the do_something_else task
+  // do more stuff
+
+  timeProfiler.start()
+  // do another task to profile 
+  timeProfiler.pause()    // here we pause the clock
+   
+  timeProfiler.takeAverageSample(); // here we capture the average of the elapsed time 
   
 ```
 
