@@ -68,7 +68,7 @@ namespace profiler
 
 		inline std::string setFileName(const char* outputDir, const char* name, const char* prefix)
 		{
-			std::srand(time(0));
+			std::srand(static_cast<unsigned int>(time(0)));
 			std::string filePath=outputDir;
 			if(filePath.length()>0){
 				filePath.append("/");
@@ -138,13 +138,12 @@ class TimeProfiler<TM, true>
 		 * Constructor
 		 * 
 		 * @param name a string to identify the dataset
-		 * @param colour the colour for the dataset as it is ploted the 
-		 *        elapsed time visualizer app
+		 * @param colour the colour used for plotting the dataset. HTML colour: #hex
 		 * @param outputDir path to the directory where the js with the dataset
 		 *        file will be created. Default will be the directory where the executable 
 		 *        is being called.
 		 * */
-		TimeProfiler(const char* name, const char* colour, const char* outputDir="")
+		TimeProfiler([[maybe_unused]] const char* name, [[maybe_unused]] const char* colour, [[maybe_unused]] const char* outputDir="")
 		{
 			#ifdef ENABLE_STOPWATCH
 			m_buffer.reserve(64);
@@ -180,7 +179,7 @@ class TimeProfiler<TM, true>
 		 * @param print if true, it will print the elapsed time to standard output.
 		 * 
 		 * */
-		void takeSample(bool print=false)
+		void takeSample([[maybe_unused]] bool print=false)
 		{
 			#ifdef ENABLE_STOPWATCH
 			if(!m_isInitialized){
@@ -211,7 +210,7 @@ class TimeProfiler<TM, true>
 		 * @param print if true, it will print the elapsed time to standard output. 
 		 * 
 		 * */		
-		void takeAverageSample(bool print=false)
+		void takeAverageSample([[maybe_unused]] bool print=false)
 		{
 			#ifdef ENABLE_STOPWATCH
 			if(m_count==0){
@@ -258,7 +257,9 @@ class TimeProfiler<TM, true>
 
 		void totalTime() const
 		{
+			#ifdef ENABLE_STOPWATCH
 			std::cout<<m_total<<TimeType<TM>::timeUnit<<std::endl;	
+			#endif
 		}
 
 		/*
@@ -277,10 +278,10 @@ class TimeProfiler<TM, true>
 		}	
 
 	private:
-		mutable std::vector<double> m_buffer;
-		std::ofstream m_outputFile;
+		mutable std::vector<double> m_buffer{};
+		std::ofstream m_outputFile{};
 		
-		std::chrono::system_clock::time_point m_startPoint;
+		std::chrono::system_clock::time_point m_startPoint{};
 		long long m_total{0};
 		long long m_partial{0};
 		long long m_count{0};

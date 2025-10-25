@@ -27,7 +27,6 @@ openSUSE, Red Hat, Ubuntu, and other common desktop distributions.
 
 ### Desktop Integration
 
-
 Creating a desktop entries for Time Profiler Visualizer ensures quick access
 from the Application menu. 
 
