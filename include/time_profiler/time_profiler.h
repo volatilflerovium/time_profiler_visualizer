@@ -1,7 +1,10 @@
 /*********************************************************************
-* Stopwatch and TimeProfiler classes                          			*
+* TimeProfiler is a class for profiling elapsed time.                *
 *                                                                    *
-* To plot output data from TimeProfiler use wxTimeProfiledVisualizer *
+* The class will generate a .js file containing the samples of elapsed
+* time measured which can be loaded into the companion appImage      *
+* (https://github.com/volatilflerovium/time_profiler_visualizer/blob/main/app/wxElapsedTimeVisualizer-x86_64.AppImage)
+* which will plot those sample in a line chart.                      *
 *                                                                    *
 * Version: 1.0                                                       *
 * Date:    18-10-2025                                                *
@@ -90,7 +93,7 @@ namespace profiler
 //====================================================================
 
 /*
- * Example:
+ * Example: (seudo code)
  * 
  * profiler::TimeProfiler<std::chrono::microseconds> timeProfiler("someName", "#colour").
  * 
@@ -113,15 +116,15 @@ namespace profiler
  * 	do something
  * 
  *    timeProfiler.start()
- *    do something else
+ *    do-something-else
  *    timeProfiler.pause()    // here we pause the clock
  *  
  *   do more stuff
  * 
  * }
  * 
- * timeProfiler.takeSample(true); // here we capture the average of the elapsed time
- *                        // of the do_something_else task
+ * timeProfiler.takeAverageSample(true); // here we capture the average of the elapsed time
+ *                                       // of the do_something_else task
  * 
  * */
 

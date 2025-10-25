@@ -9,11 +9,12 @@ we usually end repeating the test multiple times and comparing the resulting
 data visually.
 
 This library will keep track of the elapsed time and output a .js file
-that can be loaded by Time Elapsed visualizer.
+that can be loaded by [Time Profiler Visualizer](https://github.com/volatilflerovium/time_profiler_visualizer/blob/main/app/wxElapsedTimeVisualizer-x86_64.AppImage)
+to plot the samples in a line chart .
 
 ## AppImage
 
-[Time Profiler Visualizer](https://github.com/volatilflerovium/time_profiler_visualizer/releases)
+[Time Profiler Visualizer](https://github.com/volatilflerovium/time_profiler_visualizer/blob/main/app/wxElapsedTimeVisualizer-x86_64.AppImage)
 is available as an AppImage which means "one app = one file", which you can download and run on your
 Linux system while you don't need a package manager and nothing gets changed
 in your system.
@@ -26,11 +27,12 @@ openSUSE, Red Hat, Ubuntu, and other common desktop distributions.
 
 ### Desktop Integration
 
-This is totally optional.
 
 Creating a desktop entries for Time Profiler Visualizer ensures quick access
-from the Application menu. To install it, when running the appImage, clink
-on the Documentation button an follow the instructions.
+from the Application menu. 
+
+Time Profiler Visualizer can autoinstall itself. When running the appImage, 
+clink on the Documentation button an follow the instructions.
 
 ## Example
 
