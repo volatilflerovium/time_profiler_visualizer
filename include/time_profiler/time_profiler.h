@@ -14,6 +14,7 @@
 #define TIME_PROFILER_H
 
 #include <fstream>
+#include <cstring>
 #include <ctime>
 #include <chrono>
 #include <iostream>
@@ -93,7 +94,7 @@ namespace profiler
 //====================================================================
 
 /*
- * Example: (seudo code)
+ * Example:
  * 
  * profiler::TimeProfiler<std::chrono::microseconds> timeProfiler("someName", "#colour").
  * 
@@ -116,15 +117,15 @@ namespace profiler
  * 	do something
  * 
  *    timeProfiler.start()
- *    do-something-else
+ *    do something else
  *    timeProfiler.pause()    // here we pause the clock
  *  
  *   do more stuff
  * 
  * }
  * 
- * timeProfiler.takeAverageSample(true); // here we capture the average of the elapsed time
- *                                       // of the do_something_else task
+ * timeProfiler.takeSample(true); // here we capture the average of the elapsed time
+ *                        // of the do_something_else task
  * 
  * */
 
@@ -138,7 +139,8 @@ class TimeProfiler<TM, true>
 		 * Constructor
 		 * 
 		 * @param name a string to identify the dataset
-		 * @param colour the colour used for plotting the dataset. HTML colour: #hex
+		 * @param colour the colour for the dataset as it is ploted the 
+		 *        elapsed time visualizer app
 		 * @param outputDir path to the directory where the js with the dataset
 		 *        file will be created. Default will be the directory where the executable 
 		 *        is being called.
@@ -182,10 +184,10 @@ class TimeProfiler<TM, true>
 		void takeSample([[maybe_unused]] bool print=false)
 		{
 			#ifdef ENABLE_STOPWATCH
-			if(!m_isInitialized){
+			if(!m_isInitialized && m_count==0){
 				std::cout<<"Timer did not start."<<'\n';
 				return;
-			}
+			}// */
 
 			if(m_count==0){
 				m_partial=elapsedTime();
@@ -258,7 +260,7 @@ class TimeProfiler<TM, true>
 		void totalTime() const
 		{
 			#ifdef ENABLE_STOPWATCH
-			std::cout<<m_total<<TimeType<TM>::timeUnit<<std::endl;	
+			std::cout<<m_total<<TimeType<TM>::timeUnit<<std::endl;
 			#endif
 		}
 

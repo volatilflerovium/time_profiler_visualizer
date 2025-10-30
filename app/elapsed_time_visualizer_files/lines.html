@@ -1,193 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
- <meta charset="UTF-8"> 
+<meta charset="UTF-8">
 <title>Time Elapsed Visualizer</title>
 <script type="text/javascript" src="./raphael.min.js"></script>
+
+<link rel="stylesheet" href="./dist/colorpicker.min.css">
+<script src="./dist/colorpicker.iife.min.js"></script>
+
 <script type="text/javascript" src="./line_chart.min.js"></script>
+<link rel="stylesheet" href="./lines.min.css">
 
-
-<style type="text/css">
-
-#canvas 
-{
-	height: 50px;
-	border: 1px solid #aaa;
-}
-
-body{
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-/* ------------------------------------------------------- */
-* {
-  box-sizing: border-box;
-}
-
-.flex-container {
-  display: flex;
-  flex-direction: row;
-  font-size: 30px;
-  text-align: center;
-}
-
-.flex-item-left {
-  /*background-color: green; */
-  padding: 5px;
-  flex: 86%;
-}
-
-.flex-item-right {
-  /*background-color: dodgerblue;*/
-  padding: 5px;
-  flex: 14%;
-}
-
-/* Responsive layout - makes a one column-layout instead of a two-column layout */
-@media (max-width: 1000px) {
-   .flex-container {
-    flex-direction:column;
-  }
-	
-  .flex-item-right, .flex-item-left {
-    flex: 100%;
-  }
-}
-
-/*-------------------*/
-
-.flex-menu-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-menu-item {
-  /*background-color: green;*/
-  padding: 10px;
-  font-size: 30px;
-  text-align: center;
-  width: 100%;
-}
-
-
-/* On screens that are 1000px wide or less, make the columns stack on top of each other instead of next to each other */
-@media (max-width: 1000px) {
-  .flex-menu-container {
-    flex-direction:row;
-  }
-}
-
-/* ------------------------------------------------------- */
-/* ------------------------------------------------------- */
-
-div
-{
-	min-height:30px;
-	border:none;
-}
-
-input[type="file"] {
-    display: none;
-}
-
-.center {
-  margin: auto;
-  padding: 10px;
-}
-
-</style>
-
-<style>
-
-/*----- PopUP ============================ */
-
-#dim 
-{
-position:fixed;
-top: 0px;
-left: 0px;  
-width: 100%;
-height:200em;
-background: #a1a1a1;
-z-index: 1000;
-opacity:0.40;
-display:none;
-filter:Alpha(opacity=0); /* IE8 and earlier */
-}
-
-#pop_wrapper 
-{
-position:fixed;
-width: 100%; 
-height:0px;
-top:0px;
-left:0px;
-visibility:hidden;
-filter:Alpha(opacity=0); /* IE8 and earlier */
--webkit-transition: opacity 0.7s;
--moz-transition: opacity 0.7s;
--ms-transition: opacity 0.7s;
--o-transition: opacity 0.7s;
-transition: opacity 0.7s;
-z-index:1001;
-text-align: center;
-}
-
-#pop_up 
-{
-position: relative; 
-display: inline-block;
-background:#ffffff;
-border-radius: 5px;
-}   
-
-#pop_up_content
-{
-padding:20px;
-overflow-y:auto;
-max-height:600px;
-}
-
-#pop_up_header
-{
-background:#4c9df1;
-line-height:20px;
-text-align:left; 
-padding:5px;
-color:#fff;
-}
-
-#popup_content
-{
-padding:5px;
-background:#ffffff;
-}
-#popup_content > div
-{
-display:none;
-}
-
-#closePopUp
-{
-float:right;
-margin-right:4px;
-font-size:16px;
-font-weight:bold;
-cursor:default;
-}
-
-</style>
-
+<!--
+<script type="text/javascript" src="./paper.js"></script>
+<script type="text/javascript" src="./group.js"></script>
+<script type="text/javascript" src="./grid.js"></script>
+<script type="text/javascript" src="./lines.js"></script>
+-->
 
 </head>
 <body>
-
-
 <!-- --------------------------------------------- -->
 <!-- ----------------- PopUp---------------------- -->
 
@@ -221,6 +53,10 @@ cursor:default;
 				</li>
 				<li>
 					Clear will remove all the data.
+				</li>
+				<li>
+					To change colour of the data lines, click on the square next to the data key. This
+					will open a colorpicker dialog. (https://jscolorpicker.com)
 				</li>
 				<li>
 					If performance is an issue, you can open the application in your default web browser
@@ -340,229 +176,9 @@ Categories=Development
 
 </div>
 
-<script type="text/javascript">
+<!-- --------------------------------------------- -->
 
-var objData={
-   canvasID : 'canvas',
-   chartType:'lines',
-   title:{text:'Elapsed Time', align:'left'},
-   subTitle:{text:'By samples', align:'left'},
-   gridSettings:{'line-width': 1, minDataInterval:30},
-   axisTitles : {xTitle:'Samples', yTitle: 'Elapsed time (μs)'},
-	keys: {position:'right', align:'top'},
-   serie: [],
-   dataSet: [/*{"name": "-", "color": "#ffffff", "data":[0]}*/],
-   colours:[],
-   offset:0,
-   samples:-1
-};
-
-
-chartLoader('Lines', objData);
-
-
-document.getElementById('loadBtn').addEventListener('change', function(e){
-	var file = e.target.files[0];
-	if(!file){
-		return;
-	}
-
-	var reader = new FileReader();
-	reader.readAsText(file, "UTF-8");
-	reader.onload = function(e) {
-
-		var dataFile;
-		try{
-			dataFile=JSON.parse(e.target.result.toString());
-
-			if(dataFile.hasOwnProperty("dataSet")){
-				for(var j=0; j<dataFile.dataSet.length; j++){				
-					var diff=dataFile.dataSet[j].data.length-objData.serie.length;
-					if(diff>0){
-						for(var i=objData.serie.length; i<dataFile.dataSet[j].data.length; i++){
-							objData.serie.push("s"+(i+1));
-						}
-					}
-					for(var k=0; k<objData.colours.length; k++){
-						if(objData.colours[k]==dataFile.dataSet[j].color){
-							dataFile.dataSet[j].color="#"+Math.floor(Math.random()*16777215).toString(16);
-						}
-					}
-
-					objData.colours.push(dataFile.dataSet[j].color);
-					objData.dataSet.push(dataFile.dataSet[j]);
-					if(dataFile.dataSet[j].data.length==0){
-						alert("Data set for "+dataFile.dataSet[j].name+" does not have any records");					
-					}
-				}
-				reloadChar();
-			}
-		}
-		catch(e){
-			alert("File could not be loaded because it has bad syntax or it's corrupted.");
-			return;
-		}
-	};
-});
-
-
-document.getElementById("resetBtn").addEventListener("click", function(){
-	objData.offset=0;
-	objData.samples=-1;
-	reloadChar();
-});
-
-document.getElementById("clearBtn").addEventListener("click", function(){
-	objData.dataSet=[];
-	objData.serie=[];
-	objData.colours=[];
-	objData.offset=0;
-	objData.samples=-1;
-	reloadChar();
-});
-
-//=====================================================================
-
-(function(){
-	var startX=0;
-	var endX=0;
-	
-	document.getElementById("canvas").addEventListener("mousedown", function(event){ 
-		startX=event.offsetX;
-	});
-
-	document.getElementById("canvas").addEventListener("mouseup", function(event){
-		endX=event.offsetX;
-
-		if(objData.serie.length>0 && endX!=startX){
-			var firstSample=0;
-			var x=objData.firstPoint;
-
-			if(endX<startX){
-				let tmp=startX;
-				startX=endX;
-				endX=tmp;		
-			}
-		
-			while(x<startX){
-				x+=objData.intervalLength;
-				firstSample++;
-			}
-		
-			var lastSample=firstSample;
-			while(x<endX){
-				x+=objData.intervalLength;
-				lastSample++;
-			}
-
-			if(lastSample-firstSample>1){
-				objData.offset=firstSample;
-				objData.samples=lastSample-firstSample;
-
-				reloadChar();
-			}
-		}
-	});
-
-	document.getElementById("openBtn").addEventListener("click", function(){
-		window.wx_msg.postMessage("open");
-	});
-
-	document.getElementById("installBtn").addEventListener("click", function(){
-		window.wx_msg.postMessage("install");
-	});
-
-})();	
-
-//=====================================================================
-
-function ReadCookie()
-{
-	cookies={};
-	var allcookies = document.cookie;
-	var cookiearray = allcookies.split(';');
-	
-	for(var i=0; i<cookiearray.length; i++) {
-		name=cookiearray[i].split('=')[0];
-		cookies[name.trim()]=cookiearray[i].split('=')[1];
-	}
-
-	if(cookies.hasOwnProperty('appInstalled')){
-		document.getElementById("installBtn").disabled=true; 
-	}
-}
-
-var popUpAPI;
-
-window.addEventListener("DOMContentLoaded", function(){
-	window.scrollTo(0, 0);
-	(function(){
-		var dim=document.getElementById('dim');
-		var popUp=document.getElementById('pop_wrapper');	
-		var body=document.getElementById('pop_up');
-		var container=document.getElementById('popup_content');
-
-		popUp.style.top=0.1*window.innerHeight+'px';
-		body.style.maxHeight=0.8*window.innerHeight+'px';
-
-		 popUpAPI={
-				display:function(){
-					dim.style.display='block';
-					popUp.style.visibility='visible';
-				},
-				closing:function(e){
-					if(typeof e!=='undefined'){
-						e.stopPropagation();
-						return;
-					}
-					popUp.style.visibility='hidden';
-					dim.style.display='none';
-					document.getElementById('description').style.display='none';
-				},
-
-				whatisit:function(){
-					document.getElementById('popup_title').innerHTML='Description';
-					document.getElementById('description').style.display='block';					
-					this.display();
-				},
-		};
-
-		document.getElementById('closePopUp').addEventListener('click', function(){
-			popUpAPI.closing();
-		});
-
-		dim.addEventListener('click', function(){
-			popUpAPI.closing();
-		});
-
-		popUp.addEventListener('click', function(){
-			popUpAPI.closing();
-		});
-
-		container.addEventListener('click', function(event){
-			popUpAPI.closing(event);
-		});
-
-		document.getElementById('whatisit').addEventListener('click', function () {
-			popUpAPI.whatisit();
-		});
-		
-		ReadCookie();
-
-		if(document.cookie==''){
-			//popUpAPI.whatisit();
-			document.cookie="whatisit=yes";
-		}
-		
-
-	})();
-})
-
-//=====================================================================
-
-</script>
+<script type="text/javascript" src="./lines_setup.min.js"></script>
 
 </body>
-
-
 </html>
