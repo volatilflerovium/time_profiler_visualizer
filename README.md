@@ -14,8 +14,8 @@ to plot the samples in a line chart .
 
 ## AppImage
 
-[Time Profiler Visualizer](https://github.com/volatilflerovium/time_profiler_visualizer/blob/main/app/wxElapsedTimeVisualizer-x86_64.AppImage)
-is available as an AppImage which means "one app = one file", which you can download and run on your
+Time Profiler Visualizer is available as an AppImage ([in Releases](https://github.com/volatilflerovium/time_profiler_visualizer/releases)) 
+which means "one app = one file", which you can download and run on your
 Linux system while you don't need a package manager and nothing gets changed
 in your system.
 
