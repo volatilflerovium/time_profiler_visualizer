@@ -3,7 +3,7 @@
 *                                                                    *
 * The class will generate a .js file containing the samples of elapsed
 * time measured which can be loaded into the companion appImage      *
-* (https://github.com/volatilflerovium/time_profiler_visualizer/blob/main/app/wxElapsedTimeVisualizer-x86_64.AppImage)
+* (https://github.com/volatilflerovium/time_profiler_visualizer/releases)
 * which will plot those sample in a line chart.                      *
 *                                                                    *
 * Version: 1.0                                                       *
@@ -29,44 +29,72 @@
 
 //====================================================================
 
-namespace profiler
+namespace tprofiler
 {
+	template<typename T>
+	struct TimeType
+	{
+	};
+
+	template<>
+	struct TimeType<std::chrono::nanoseconds>
+	{
+		static constexpr const char* timeUnit="ns";
+		typedef std::ratio<1, 1000000000> timePeriod;
+	};
+	template<>
+	struct TimeType<std::chrono::microseconds>
+	{
+		static constexpr const char* timeUnit="μs";
+		typedef std::ratio<1, 1000000> timePeriod;
+	};
+	template<>
+	struct TimeType<std::chrono::milliseconds>
+	{
+		static constexpr const char* timeUnit="ms";
+		typedef std::ratio<1, 1000> timePeriod;
+	};
+
+	template<>
+	struct TimeType<std::chrono::seconds>
+	{
+		static constexpr const char* timeUnit="secs";
+		typedef std::ratio<1> timePeriod;
+	};
+
+	template<>
+	struct TimeType<std::chrono::minutes>
+	{
+		static constexpr const char* timeUnit="mins";
+		typedef std::ratio<60> timePeriod;
+	};
+
+	template<>
+	struct TimeType<std::chrono::hours>
+	{
+		static constexpr const char* timeUnit="hrs";
+		typedef std::ratio<3600> timePeriod;
+	};
+
+	#if __cplusplus == 202002L
+	template<>
+	struct TimeType<std::chrono::days>
+	{
+		static constexpr const char* timeUnit="days";
+		typedef std::ratio<86400> timePeriod;
+	};
+	/*
+	template<>
+	struct TimeType<std::chrono::weeks> std::ratio<604800>
+	template<>
+	struct TimeType<std::chrono::months> std::ratio<2629746>
+	template<>
+	struct TimeType<std::chrono::years> std::ratio<31556952>
+	*/
+	#endif
+
 	inline namespace internal
 	{
-		template<typename T>
-		struct TimeType
-		{
-			enum {value=false};
-		};
-
-		template<>
-		struct TimeType<std::chrono::seconds>
-		{
-			enum {value=true};
-			static constexpr const char* timeUnit="secs";
-		};
-
-		template<>
-		struct TimeType<std::chrono::milliseconds>
-		{
-			enum {value=true};
-			static constexpr const char* timeUnit="ms";
-		};
-
-		template<>
-		struct TimeType<std::chrono::microseconds>
-		{
-			enum {value=true};
-			static constexpr const char* timeUnit="μs";
-		};
-
-		template<>
-		struct TimeType<std::chrono::nanoseconds>
-		{
-			enum {value=true};
-			static constexpr const char* timeUnit="ns";
-		};
-
 		inline std::string setFileName(const char* outputDir, const char* name, const char* prefix)
 		{
 			std::srand(static_cast<unsigned int>(time(0)));
@@ -85,10 +113,6 @@ namespace profiler
 			filePath.append(".js");
 			return filePath;
 		}
-
-		template<typename TM, bool=profiler::TimeType<TM>::value>
-		class TimeProfiler
-		{};
 	}
 
 //====================================================================
@@ -112,7 +136,7 @@ namespace profiler
  * }
  * 
  * example 2)
- * 
+ *
  * do_loop{
  * 	do something
  * 
@@ -123,16 +147,34 @@ namespace profiler
  *   do more stuff
  * 
  * }
- * 
+ *
  * timeProfiler.takeSample(true); // here we capture the average of the elapsed time
  *                        // of the do_something_else task
+ *
+ *
+ * Custom time periods:
+ * 
+ * namespace tprofiler	
+ * {
+ * 	struct FramePerSecond
+ * 	{};
+ * 
+ * 	template<>
+ * 	struct TimeType<FramePerSecond>
+ * 	{
+ * 		static constexpr const char* timeUnit="fps";
+ * 		typedef std::ratio<1, 24> timePeriod;
+ * 	};
+ * }
+ *
+ * using Profiler=tprofiler::TimeProfiler<tprofiler::FramePerSecond>;
  * 
  * */
 
 //====================================================================
 
 template<typename TM>
-class TimeProfiler<TM, true>
+class TimeProfiler
 {
 	public:
 		/*
@@ -149,15 +191,17 @@ class TimeProfiler<TM, true>
 		{
 			#ifdef ENABLE_STOPWATCH
 			m_buffer.reserve(64);
-			m_outputFile.open(setFileName(outputDir, name, "line_dataset_"));
-			if(m_outputFile.is_open()){
-				m_outputFile<<"{\"dataSet\" : [\n";
-				m_outputFile<<"{\"name\": "<<"\""<<name<<"\", \"color\": \""<<colour;
-				m_outputFile<<"\", \"data\":[";
+			if(std::strlen(outputDir)>0){
+				m_outputFile.open(setFileName(outputDir, name, "line_dataset_"));
+				if(m_outputFile.is_open()){
+					m_outputFile<<"{\"dataSet\" : [\n";
+					m_outputFile<<"{\"name\": "<<"\""<<name<<"\", \"color\": \""<<colour;
+					m_outputFile<<"\", \"data\":[";
+				}
 			}
 			#endif
 		}
-		
+
 		~TimeProfiler()
 		{
 			flush();
@@ -187,23 +231,23 @@ class TimeProfiler<TM, true>
 			if(!m_isInitialized && m_count==0){
 				std::cout<<"Timer did not start."<<'\n';
 				return;
-			}// */
+			}
 
 			if(m_count==0){
 				m_partial=elapsedTime();
 			}
-			
+
 			if(print){
 				std::cout<<"Elapsed time:"<<m_partial<<" "<<TimeType<TM>::timeUnit<<"\n";
 			}
-			m_buffer.push_back(static_cast<double>(m_partial));
+			m_buffer.push_back(m_partial);
 			m_total=m_total+m_partial;
 			m_partial=0;
 			m_count=0;			
 			m_isInitialized=false;
 			#endif
 		}
-		 
+
 		 /*
 		 * Use in tandem with pause. Will take the current elapsed time 
 		 * and average on the times pause was called. This reset 
@@ -211,7 +255,7 @@ class TimeProfiler<TM, true>
 		 * 
 		 * @param print if true, it will print the elapsed time to standard output. 
 		 * 
-		 * */		
+		 * */
 		void takeAverageSample([[maybe_unused]] bool print=false)
 		{
 			#ifdef ENABLE_STOPWATCH
@@ -220,7 +264,7 @@ class TimeProfiler<TM, true>
 				return;
 			}
 
-			double averageTime=static_cast<double>(m_partial)/static_cast<double>(m_count);
+			double averageTime=m_partial/static_cast<double>(m_count);
 			m_buffer.push_back(averageTime);
 			
 			m_count=0;
@@ -282,30 +326,32 @@ class TimeProfiler<TM, true>
 	private:
 		mutable std::vector<double> m_buffer{};
 		std::ofstream m_outputFile{};
-		
-		std::chrono::system_clock::time_point m_startPoint{};
-		long long m_total{0};
-		long long m_partial{0};
+
+		std::chrono::high_resolution_clock::time_point m_startPoint{};
+		double m_total{0};
+		double m_partial{0};
 		long long m_count{0};
 		bool m_isInitialized{false};
 
-		long long elapsedTime() __attribute__((always_inline))
+		typedef std::chrono::duration<double, typename TimeType<TM>::timePeriod > duration;
+
+		double elapsedTime() __attribute__((always_inline))
 		{
-			auto elapsed = std::chrono::high_resolution_clock::now() - m_startPoint;
-			return std::chrono::duration_cast<TM>(elapsed).count();
+			duration elapsed = std::chrono::high_resolution_clock::now() - m_startPoint;
+			return elapsed.count();
 		}
-		
+
 		/*
 		 * Force to dump the dataset. This method is called by the destructor.
 		 *
 		 * */
-		void flush();		
+		void flush();
 };
 
 //--------------------------------------------------------------------
 
 template<typename TM>
-void TimeProfiler<TM, true>::flush()
+void TimeProfiler<TM>::flush()
 {
 	#ifdef ENABLE_STOPWATCH
 	if(m_outputFile.is_open()){
